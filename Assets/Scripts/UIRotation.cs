@@ -6,6 +6,8 @@ public class UIRotation : MonoBehaviour
 {
 	public bool fixedZ = true;
 
+	private Vector3 mousePosition;
+	private float rotationSpeed = 0.05f;
 	private Vector3 point = new Vector3();
 
     // Start is called before the first frame update
@@ -14,7 +16,7 @@ public class UIRotation : MonoBehaviour
 		var tempVector3 = transform.localPosition;
 		tempVector3.y = tempVector3.z = 0;
 		point = tempVector3;
-
+		point = Vector3.zero;
 		Debug.Log(point);
     }
 
@@ -40,14 +42,9 @@ public class UIRotation : MonoBehaviour
 		
 
 #elif UNITY_EDITOR
-		if (Input.GetKey(KeyCode.A))
-		{
-			transform.RotateAround(point, Vector3.up, -Time.deltaTime * 20);
-		}
-		if (Input.GetKey(KeyCode.D))
-		{
-			transform.RotateAround(point, Vector3.up, Time.deltaTime * 20);
-		}
+
+		mousePosition = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+		transform.localPosition = (-mousePosition) + transform.localPosition;
 
 		if (fixedZ)
 			transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, Mathf.Clamp(transform.localPosition.z, 0, 0));
