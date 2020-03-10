@@ -29,22 +29,18 @@ public class BatteryUI : MonoBehaviour
 			}
 			else if (batteryLevel > 0.85f)
 			{
-				Debug.Log(3);
 				batteryImage.sprite = batterySprites[3];
 			}
 			else if (batteryLevel >= 0.5f)
 			{
-				Debug.Log(2);
 				batteryImage.sprite = batterySprites[2];
 			}
 			else if (batteryLevel >= 0.15f)
 			{
-				Debug.Log(1);
 				batteryImage.sprite = batterySprites[1];
 			}
 			else if (batteryLevel >= 0)
 			{
-				Debug.Log(0);
 				batteryImage.sprite = batterySprites[0];
 			}
 
