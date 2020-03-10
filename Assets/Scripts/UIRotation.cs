@@ -4,8 +4,7 @@ using UnityEngine;
 
 public class UIRotation : MonoBehaviour
 {
-	public bool fixedZ = true;
-
+	[SerializeField] private bool fixedZ = true;
 	private Vector3 mousePosition;
 	private float rotationSpeed = 0.05f;
 	private Vector3 point = new Vector3();
@@ -17,7 +16,6 @@ public class UIRotation : MonoBehaviour
 		tempVector3.y = tempVector3.z = 0;
 		point = tempVector3;
 		point = Vector3.zero;
-		Debug.Log(point);
     }
 
     // Update is called once per frame
