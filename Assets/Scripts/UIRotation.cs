@@ -8,6 +8,7 @@ public class UIRotation : MonoBehaviour
 	private Vector3 mousePosition;
 	private float rotationSpeed = 0.05f;
 	private Vector3 point = new Vector3();
+	private Coroutine comebackCoroutine;
 
     // Start is called before the first frame update
     void Start()
@@ -35,17 +36,41 @@ public class UIRotation : MonoBehaviour
 
 		dir *= Time.deltaTime;
 
-		transform.RotateAround(point, Vector3.up, dir.x);
-
-		
+		transform.RotateAround(point, Vector3.up, dir.z);
 
 #elif UNITY_EDITOR
-
 		mousePosition = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 		transform.localPosition = (-mousePosition) + transform.localPosition;
 
+		if (mousePosition == Vector3.zero)
+		{
+			if (comebackCoroutine == null)
+			{
+				comebackCoroutine = StartCoroutine(Comeback());
+			}
+		}
+		else
+		{
+			if (comebackCoroutine != null)
+			{
+				StopCoroutine(comebackCoroutine);
+				comebackCoroutine = null;
+			}
+		}
+#endif
+
 		if (fixedZ)
 			transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, Mathf.Clamp(transform.localPosition.z, 0, 0));
-#endif
+	}
+
+	public IEnumerator Comeback()
+	{
+		while (transform.localPosition != Vector3.zero)
+		{
+			transform.localPosition = Vector3.Lerp(transform.localPosition, Vector3.zero, Time.deltaTime);
+
+			yield return null;
+		}
+		yield return null;
 	}
 }
