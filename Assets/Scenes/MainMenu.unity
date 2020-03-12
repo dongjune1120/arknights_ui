@@ -4473,7 +4473,7 @@ MonoBehaviour:
   fixedX: 0
   fixedY: 0
   fixedZ: 1
-  speed: 0.3
+  speed: 0.2
 --- !u!1 &953328231
 GameObject:
   m_ObjectHideFlags: 0
@@ -6453,7 +6453,7 @@ MonoBehaviour:
   fixedX: 0
   fixedY: 0
   fixedZ: 1
-  speed: 0.2
+  speed: 0.15
 --- !u!1 &1634970374
 GameObject:
   m_ObjectHideFlags: 0
