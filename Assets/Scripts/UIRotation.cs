@@ -4,47 +4,47 @@ using UnityEngine;
 
 public class UIRotation : MonoBehaviour
 {
+	[SerializeField] private bool oppsiteMove = false;
+	[SerializeField] private bool fixedX = false;
+	[SerializeField] private bool fixedY = false;
 	[SerializeField] private bool fixedZ = true;
+	[SerializeField] private float speed = 1f;
+
+	private Vector3 originalPosition;
+	private Vector3 prevAcceleration;
 	private Vector3 mousePosition;
-	private float rotationSpeed = 5f;
-	private Vector3 point = new Vector3();
 	private Coroutine comebackCoroutine;
 	private bool isIdle;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-		var tempVector3 = transform.localPosition;
-		tempVector3.y = tempVector3.z = 0;
-		point = tempVector3;
-		point = Vector3.zero;
-    }
+	// Start is called before the first frame update
+	private void Start()
+	{
+		originalPosition = transform.localPosition;
+		prevAcceleration = Input.acceleration;
+	}
 
-    // Update is called once per frame
-    void Update()
-    {
+	// Update is called once per frame
+	private void Update()
+	{
 #if UNITY_ANDROID && UNITY_IOS
-		Vector3 dir = new Vector3
+
+		Vector3 acceleration = Input.acceleration - prevAcceleration;
+		Debug.Log(acceleration);
+		if (acceleration.sqrMagnitude > 1)
 		{
-			x = -Input.acceleration.y,
-			z = Input.acceleration.x,
-			y = Input.acceleration.z
-		};
-		Debug.Log(dir);
-		if (dir.sqrMagnitude > 1)
-		{
-			dir.Normalize();
+			acceleration.Normalize();
 		}
+		Debug.Log(acceleration);
+		Vector3 accPosition = new Vector3 { x = acceleration.x };
+		transform.localPosition -= accPosition * 10;
 
-		dir *= Time.deltaTime;
+		isIdle = Mathf.Abs(acceleration.x) < Mathf.Epsilon ? true : false;
 
-		transform.RotateAround(point, Vector3.up, dir.z * rotationSpeed);
-
-		isIdle = dir.z == 0 ? true : false;
-
+		prevAcceleration = Input.acceleration;
+		Debug.Log(isIdle);
 #elif UNITY_EDITOR || UNITY_STANDALONE_WIN
 		mousePosition = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-		transform.localPosition = (-mousePosition) + transform.localPosition;
+		transform.localPosition += (oppsiteMove ? mousePosition : -mousePosition) * speed;
 
 		isIdle = mousePosition == Vector3.zero ? true : false;
 #endif
@@ -64,15 +64,19 @@ public class UIRotation : MonoBehaviour
 			}
 		}
 
-		if (fixedZ)
-			transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, Mathf.Clamp(transform.localPosition.z, 0, 0));
+		transform.localPosition = new Vector3
+		{
+			x = fixedX ? originalPosition.x : transform.localPosition.x,
+			y = fixedY ? originalPosition.y : transform.localPosition.y,
+			z = fixedZ ? originalPosition.z : transform.localPosition.z
+		};
 	}
 
 	public IEnumerator Comeback()
 	{
 		while (transform.localPosition != Vector3.zero)
 		{
-			transform.localPosition = Vector3.Lerp(transform.localPosition, Vector3.zero, Time.deltaTime);
+			transform.localPosition = Vector3.Lerp(transform.localPosition, originalPosition, Time.deltaTime);
 
 			yield return null;
 		}
