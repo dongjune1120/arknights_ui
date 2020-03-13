@@ -12,7 +12,6 @@ public class UIRotation : MonoBehaviour
 
 	private Vector3 originalPosition;
 	private Vector3 prevAcceleration;
-	private Vector3 mousePosition;
 	private Coroutine comebackCoroutine;
 	private bool isIdle;
 
@@ -26,27 +25,10 @@ public class UIRotation : MonoBehaviour
 	// Update is called once per frame
 	private void Update()
 	{
-#if UNITY_ANDROID && UNITY_IOS
-
-		Vector3 acceleration = Input.acceleration - prevAcceleration;
-		Debug.Log(acceleration);
-		if (acceleration.sqrMagnitude > 1)
-		{
-			acceleration.Normalize();
-		}
-		Debug.Log(acceleration);
-		Vector3 accPosition = new Vector3 { x = acceleration.x };
-		transform.localPosition -= accPosition * 10;
-
-		isIdle = Mathf.Abs(acceleration.x) < Mathf.Epsilon ? true : false;
-
-		prevAcceleration = Input.acceleration;
-		Debug.Log(isIdle);
+#if UNITY_ANDROID && !UNITY_EDITOR
+		AndroidAccelerate();
 #elif UNITY_EDITOR || UNITY_STANDALONE_WIN
-		mousePosition = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-		transform.localPosition += (oppsiteMove ? mousePosition : -mousePosition) * speed;
-
-		isIdle = mousePosition == Vector3.zero ? true : false;
+		EditorTestAccelerate();
 #endif
 		if (isIdle)
 		{
@@ -70,6 +52,24 @@ public class UIRotation : MonoBehaviour
 			y = fixedY ? originalPosition.y : transform.localPosition.y,
 			z = fixedZ ? originalPosition.z : transform.localPosition.z
 		};
+	}
+
+	public void AndroidAccelerate()
+	{
+		var acceleration = Input.acceleration - prevAcceleration;
+		transform.localPosition += (oppsiteMove ? acceleration : -acceleration) * speed;
+
+		isIdle = Mathf.Abs(acceleration.x) < 0.01f ? true : false;
+
+		prevAcceleration = acceleration;
+	}
+
+	public void EditorTestAccelerate()
+	{
+		var mousePosition = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+		transform.localPosition += (oppsiteMove ? mousePosition : -mousePosition) * speed;
+
+		isIdle = mousePosition == Vector3.zero ? true : false;
 	}
 
 	public IEnumerator Comeback()
