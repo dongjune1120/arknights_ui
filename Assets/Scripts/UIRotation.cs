@@ -16,26 +16,22 @@ public class UIRotation : MonoBehaviour
 	private bool isIdle;
 
 	private float lerpTime = 0f;
-	private Vector3 temp = new Vector3();
+	private float accelerometerUpdateInterval = 1.0f / 9.0f;
+	private float lowPassKernelWidthInSeconds = 1.0f;
+	private float lowPassFilterFactor;
+	private Vector3 lowPassValue;
 
 	// Start is called before the first frame update
 	private void Start()
 	{
 		originalPosition = transform.localPosition;
-		prevAcceleration = Input.acceleration;
+		prevAcceleration = lowPassValue = Input.acceleration;
+		lowPassFilterFactor = accelerometerUpdateInterval / lowPassKernelWidthInSeconds;
 	}
 
 	// Update is called once per frame
 	private void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.A))
-		{
-			temp.x -= 0.1f;
-		}
-		if (Input.GetKeyDown(KeyCode.D))
-		{
-			temp.x += 0.1f;
-		}
 #if UNITY_ANDROID// && !UNITY_EDITOR
 		AndroidAccelerate();
 #elif UNITY_EDITOR || UNITY_STANDALONE_WIN
@@ -67,12 +63,10 @@ public class UIRotation : MonoBehaviour
 
 	public void AndroidAccelerate()
 	{
-		var acceleration = Input.acceleration - prevAcceleration;
-		if (acceleration.sqrMagnitude > 1) acceleration.Normalize();
-		transform.localPosition += (oppsiteMove ? acceleration : -acceleration) * speed * 1000;
-		
-		
-
+		var lowPassAcceleration = LowPassFilterAccelerometer();
+		var acceleration = (lowPassAcceleration - prevAcceleration) * 100;
+		transform.localPosition += (oppsiteMove ? acceleration : -acceleration) * speed * 5;
+		Debug.Log("Total: " + acceleration + ", Low: " + lowPassAcceleration + ", Input: " + Input.acceleration);
 		if (acceleration == Vector3.zero && !isIdle)
 		{
 			lerpTime += Time.deltaTime;
@@ -81,34 +75,14 @@ public class UIRotation : MonoBehaviour
 			{
 				isIdle = true;
 				lerpTime = 0f;
-				Debug.Log("TRUE");
 			}
 			else
 			{
 				isIdle = false;
 			}
 		}
-		
-		prevAcceleration = Input.acceleration;
 
-		//isIdle = Mathf.Abs(acceleration.x) < 0.01f ? true : false;
-
-		
-
-		//var period = 0f;
-		//var accelResult = Vector3.zero;
-		//for (var i = 0; i < Input.accelerationEventCount; i++)
-		//{
-		//	AccelerationEvent accelerationEvent = Input.GetAccelerationEvent(i);
-		//	accelResult += accelerationEvent.acceleration * accelerationEvent.deltaTime;
-		//	period += accelerationEvent.deltaTime;
-		//	Debug.Log("i: " + i +  ", AccelEvent: " + accelResult + ", Aceeleration: " + accelerationEvent.acceleration + ", DeltaTime: " + accelerationEvent.deltaTime);
-		//}
-		//if (period > 0)
-		//	accelResult *= 1.0f / period;
-
-		//Debug.Log("AccelResult: " + accelResult);
-		//Debug.Log("InputAccel : " + Input.acceleration);
+		prevAcceleration = lowPassAcceleration;
 	}
 
 	public void EditorTestAccelerate()
@@ -117,6 +91,11 @@ public class UIRotation : MonoBehaviour
 		transform.localPosition += (oppsiteMove ? mousePosition : -mousePosition) * speed;
 
 		isIdle = mousePosition == Vector3.zero ? true : false;
+	}
+
+	public Vector3 LowPassFilterAccelerometer()
+	{
+		return lowPassValue = Vector3.Lerp(lowPassValue, Input.acceleration, lowPassFilterFactor);
 	}
 
 	public IEnumerator Comeback()
