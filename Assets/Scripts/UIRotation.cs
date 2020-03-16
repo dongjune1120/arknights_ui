@@ -16,6 +16,7 @@ public class UIRotation : MonoBehaviour
 	private bool isIdle;
 
 	private float lerpTime = 0f;
+
 	private float accelerometerUpdateInterval = 1.0f / 9.0f;
 	private float lowPassKernelWidthInSeconds = 1.0f;
 	private float lowPassFilterFactor;
@@ -32,7 +33,7 @@ public class UIRotation : MonoBehaviour
 	// Update is called once per frame
 	private void Update()
 	{
-#if UNITY_ANDROID// && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
 		AndroidAccelerate();
 #elif UNITY_EDITOR || UNITY_STANDALONE_WIN
 		EditorTestAccelerate();
@@ -66,8 +67,8 @@ public class UIRotation : MonoBehaviour
 		var lowPassAcceleration = LowPassFilterAccelerometer();
 		var acceleration = (lowPassAcceleration - prevAcceleration) * 100;
 		transform.localPosition += (oppsiteMove ? acceleration : -acceleration) * speed * 5;
-		Debug.Log("Total: " + acceleration + ", Low: " + lowPassAcceleration + ", Input: " + Input.acceleration);
-		if (acceleration == Vector3.zero && !isIdle)
+
+		if (acceleration.x < 0.1f && acceleration.y < 0.1f && acceleration.z < 0.1f && !isIdle)
 		{
 			lerpTime += Time.deltaTime;
 
