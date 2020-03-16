@@ -15,6 +15,9 @@ public class UIRotation : MonoBehaviour
 	private Coroutine comebackCoroutine;
 	private bool isIdle;
 
+	private float lerpTime = 0f;
+	private Vector3 temp = new Vector3();
+
 	// Start is called before the first frame update
 	private void Start()
 	{
@@ -25,7 +28,15 @@ public class UIRotation : MonoBehaviour
 	// Update is called once per frame
 	private void Update()
 	{
-#if UNITY_ANDROID && !UNITY_EDITOR
+		if (Input.GetKeyDown(KeyCode.A))
+		{
+			temp.x -= 0.1f;
+		}
+		if (Input.GetKeyDown(KeyCode.D))
+		{
+			temp.x += 0.1f;
+		}
+#if UNITY_ANDROID// && !UNITY_EDITOR
 		AndroidAccelerate();
 #elif UNITY_EDITOR || UNITY_STANDALONE_WIN
 		EditorTestAccelerate();
@@ -57,11 +68,47 @@ public class UIRotation : MonoBehaviour
 	public void AndroidAccelerate()
 	{
 		var acceleration = Input.acceleration - prevAcceleration;
-		transform.localPosition += (oppsiteMove ? acceleration : -acceleration) * speed;
+		if (acceleration.sqrMagnitude > 1) acceleration.Normalize();
+		transform.localPosition += (oppsiteMove ? acceleration : -acceleration) * speed * 1000;
+		
+		
 
-		isIdle = Mathf.Abs(acceleration.x) < 0.01f ? true : false;
+		if (acceleration == Vector3.zero && !isIdle)
+		{
+			lerpTime += Time.deltaTime;
 
-		prevAcceleration = acceleration;
+			if (lerpTime > 1f)
+			{
+				isIdle = true;
+				lerpTime = 0f;
+				Debug.Log("TRUE");
+			}
+			else
+			{
+				isIdle = false;
+			}
+		}
+		
+		prevAcceleration = Input.acceleration;
+
+		//isIdle = Mathf.Abs(acceleration.x) < 0.01f ? true : false;
+
+		
+
+		//var period = 0f;
+		//var accelResult = Vector3.zero;
+		//for (var i = 0; i < Input.accelerationEventCount; i++)
+		//{
+		//	AccelerationEvent accelerationEvent = Input.GetAccelerationEvent(i);
+		//	accelResult += accelerationEvent.acceleration * accelerationEvent.deltaTime;
+		//	period += accelerationEvent.deltaTime;
+		//	Debug.Log("i: " + i +  ", AccelEvent: " + accelResult + ", Aceeleration: " + accelerationEvent.acceleration + ", DeltaTime: " + accelerationEvent.deltaTime);
+		//}
+		//if (period > 0)
+		//	accelResult *= 1.0f / period;
+
+		//Debug.Log("AccelResult: " + accelResult);
+		//Debug.Log("InputAccel : " + Input.acceleration);
 	}
 
 	public void EditorTestAccelerate()
